@@ -11,6 +11,7 @@ public class EnemyController : MonoBehaviour
     private Vector2 velocity;
 
     private Rigidbody2D rb;
+
     // Start is called before the first frame update
     void Start()
     {   
@@ -21,15 +22,19 @@ public class EnemyController : MonoBehaviour
         ComputeVelocity();
     }
 
+    // Move goomba in a straight line in a direction
     void ComputeVelocity(){
       velocity = new Vector2(-1*maxOffset / enemyPatroltime, 0);
     }
 
-    // Update is called once per frame
+    // Update goomba velocity and reverse when hit maximum displacement
     void Update()
-    {   
+    {      
+        // check if offset have exceeded maximum limit
+        // if yes, move the starting position to current position 
+        // and reverse goomba velocity
         if (Mathf.Abs(rb.position.x - startX) > maxOffset)
-        {// move gomba
+        {
             startX = transform.position.x;
             velocity *= -1;
         }

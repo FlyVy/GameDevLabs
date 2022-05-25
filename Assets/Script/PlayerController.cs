@@ -21,15 +21,17 @@ public class PlayerController : MonoBehaviour
     private float dirX;
     private float dirY;
     private bool isGrounded = true;
-    public float moveSpeed = 7f;
-    public float jumpForce = 21f;
-    public LayerMask jumpableGround;
+    private float moveSpeed = 2f;
+    private float jumpForce = 21f;
+    private float maxSpeed = 7f;
+    public int state=0;
 
-    private enum MovementState {idle, running, jumping}
+    private enum MovementState {idle, running, jumping,skidding}
 
     // Start is called before the first frame update
     private void Start()
-    {
+    {   
+        Application.targetFrameRate = 30;   
         Debug.Log("Player start");
         rb = GetComponent<Rigidbody2D>();
         coll = GetComponent<BoxCollider2D>();
@@ -37,27 +39,36 @@ public class PlayerController : MonoBehaviour
         anim = GetComponent<Animator>();
     }
 
-    // Update is called once per frame
-    private void Update()
-    {
-        dirX = Input.GetAxisRaw("Horizontal");
-        rb.velocity = new Vector2(dirX*moveSpeed,rb.velocity.y);
+    // Update the physics
+    void FixedUpdate()
+    {      
+        dirX = Input.GetAxis("Horizontal");
+        if (Mathf.Abs(dirX) > 0){
+            if (Math.Abs(rb.velocity.x)<maxSpeed){
+                rb.velocity += new Vector2(dirX*moveSpeed,0);
+                Debug.Log(rb.velocity);
+            }
+        }
 
-        if (Input.GetButtonDown("Jump") && isGrounded)
+        if (Input.GetButtonDown("Jump") && isGrounded && rb.velocity.y<0.1f)
         {
-            rb.velocity = new Vector2(rb.velocity.x,jumpForce);
+            rb.velocity += new Vector2(0,jumpForce);
             countScoreState = true; //check if Gomba is underneath   
             isGrounded = false;
         }
+    }
+    // Update the animations (not needed for checkoff1)
+    private void Update()
+    {   
         if (Time.timeScale==1.0f)
-        {
-            anim.SetInteger("state", getState());
-        ScoreUpdate();
+        {   
+            state = getState();
+            anim.SetInteger("state", state);
+            ScoreUpdate();
         }
-        
-
     }
 
+    // Update the score for checkoff1
     private void ScoreUpdate()
     {
         if (!isGrounded && countScoreState)
@@ -69,6 +80,8 @@ public class PlayerController : MonoBehaviour
             }
       }
     }
+    
+    // Manage and update states
     private int getState()
     {
         if (Math.Abs(rb.velocity.y)>.1f)
@@ -76,11 +89,21 @@ public class PlayerController : MonoBehaviour
             return (int)MovementState.jumping;
         }
 
-        if (dirX>0f)
+        // Development for skidding animation
+        // Need to make it smoother
+        /* if (rb.velocity.x>2f){
+            sprite.flipX = true;
+            return (int)MovementState.skidding;
+        } else if(rb.velocity.x<-2f){
+            sprite.flipX = false;
+            return (int)MovementState.skidding;
+        } */
+
+        if (rb.velocity.x>.1f)
         {
             sprite.flipX = false;
             return (int)MovementState.running;
-        } else if (dirX<0f)
+        } else if (rb.velocity.x<-.1f)
         {
             sprite.flipX = true;
             return (int)MovementState.running;
@@ -89,7 +112,7 @@ public class PlayerController : MonoBehaviour
         return (int)MovementState.idle;
     }
 
-
+    // Check for collision with ground
     void OnCollisionEnter2D(Collision2D col)
     {
         if (col.gameObject.CompareTag("Ground"))
@@ -100,6 +123,7 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    // Check for collision with goomba
     void OnTriggerEnter2D(Collider2D other)
     {
         if (other.gameObject.CompareTag("Enemy"))
@@ -110,6 +134,7 @@ public class PlayerController : MonoBehaviour
         }
      }
 
+    // Restart scene
      private void RestartLevel()
      {
          SceneManager.LoadScene(SceneManager.GetActiveScene().name);
