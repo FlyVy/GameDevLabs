@@ -5,8 +5,6 @@ using TMPro;
 
 public class MenuController : MonoBehaviour
 {
-    public Transform marioTransform;
-    public Transform enemyTransform;
     public TMP_Text scoreText;
     private Vector3 startEnemy = new Vector3(2.49f, -0.67f, 0.0f);
     private Vector3 startMario = new Vector3(-0.09f, -0.15f, 0.0f) ;
@@ -18,8 +16,6 @@ public class MenuController : MonoBehaviour
     {   
         
         scoreText.text = "Score: 0";
-        enemyTransform.position = startEnemy;
-        marioTransform.position = startMario;
         foreach (Transform eachChild in transform)
         {
             if (eachChild.name != "Score")
